@@ -17,4 +17,6 @@ The purpose of this library is to simplify the implementation of Sockets in syst
 * Github: https://github.com/AlejandroRM94
 * Facebook: https://www.facebook.com/Aleckz94
 
+All suggestions for improving the code are welcome!
+
 Todas las sugerencias para mejorar el código son bienvenidas!
