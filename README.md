@@ -2,6 +2,7 @@
 The purpose of this library is to simplify the implementation of Sockets in systems GNU / Linux and Windows, allowing write portable code.
 
 ## OS Tested
+All examples have been tested successfully on the following operating systems
 - Windows 10 64 bit
 - Ubuntu 16.04 64bit
 
