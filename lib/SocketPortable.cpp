@@ -94,13 +94,6 @@ string SocketPortable::getLastErrorMessage() {
 
     return message;
 }
-bool SocketPortable::connect( const struct sockaddr *addr, int addrlen ) {
-    if( ::connect( sockfd, addr, addrlen ) != 0 ) {
-        close();
-        return false;
-    }
-    return true;
-}
 bool SocketPortable::socket( int domain, int type, int protocol ) {
     sockfd = ::socket( domain, type, protocol );
     if( sockfd == INVALID_SOCKET ) {
@@ -128,14 +121,11 @@ int SocketPortable::recv( char *buf, int len, int flags ) {
 int SocketPortable::send( const char *buf, int len, int flags ) {
     return ::send( sockfd, buf, len, flags );
 }
-bool SocketPortable::setsockopt( int level, int optname, const void *optval, int optlen ) {
+bool SocketPortable::setsockopt( int level, int optname, const void *optval, socklen_t optlen ) {
     return ::setsockopt( sockfd, level, optname, ( char* )optval, optlen ) >= 0 ;
 }
-bool SocketPortable::bind( const struct sockaddr *addr, int addrlen ) {
-    return ::bind( sockfd, addr, addrlen ) >= 0 ;
-}
 int SocketPortable::recvfrom( char *buf, int len, int flags, struct sockaddr *src_addr,
-                              int *addrlen ) {
+                              socklen_t *addrlen ) {
     return ::recvfrom( sockfd, buf, len, flags, src_addr, addrlen );
 }
 #else
@@ -145,13 +135,6 @@ SocketPortable::~SocketPortable() {
 }
 string SocketPortable::getLastErrorMessage() {
     return strerror( errno );
-}
-bool SocketPortable::connect( const struct sockaddr *addr, socklen_t addrlen ) {
-    if( ::connect( sockfd, addr, addrlen ) < 0 ) {
-        ::close( sockfd );
-        return false;
-    }
-    return true;
 }
 bool SocketPortable::socket( int domain, int type, int protocol ) {
     sockfd = ::socket( domain, type, protocol );
@@ -184,14 +167,17 @@ ssize_t SocketPortable::send( const void *buf, size_t len, int flags ) {
 bool SocketPortable::setsockopt( int level, int optname, const void *optval, socklen_t optlen ) {
     return ::setsockopt( sockfd, level, optname, optval, optlen ) >= 0 ;
 }
-bool SocketPortable::bind( const struct sockaddr *addr, socklen_t addrlen ) {
-    return ::bind( sockfd, addr, addrlen ) >= 0 ;
-}
 ssize_t SocketPortable::recvfrom( void *buf, size_t len, int flags, struct sockaddr *src_addr,
                                   socklen_t *addrlen ) {
     return ::recvfrom( sockfd, buf, len, flags, src_addr, addrlen );
 }
 #endif
+bool SocketPortable::bind( const struct sockaddr *addr, socklen_t addrlen ) {
+    return ::bind( sockfd, addr, addrlen ) >= 0 ;
+}
+bool SocketPortable::listen( int backlog ) {
+    return ::listen( sockfd, backlog ) >= 0 ;
+}
 bool SocketPortable::connect( const char *node, const char *service,
                               const struct addrinfo *hints ) {
     struct addrinfo *res, *rp;
@@ -216,4 +202,22 @@ bool SocketPortable::connect( const char *node, const char *service,
     }
     freeaddrinfo( res );
     return true;
+}
+
+bool SocketPortable::connect( const struct sockaddr *addr, socklen_t addrlen ) {
+    if( ::connect( sockfd, addr, addrlen ) != 0 ) {
+        close();
+        return false;
+    }
+    return true;
+}
+
+SocketPortable* SocketPortable::accept( struct sockaddr *addr, socklen_t *addrlen ) {
+    SocketPortable* accepted = new SocketPortable();
+    accepted->sockfd = ::accept( sockfd, addr, addrlen );
+    return accepted;
+}
+
+sp_type SocketPortable::getFD() {
+    return sockfd;
 }

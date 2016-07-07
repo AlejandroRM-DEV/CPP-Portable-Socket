@@ -37,22 +37,24 @@ using namespace std;
 #include <winsock2.h>
 #include <ws2tcpip.h>
 
+typedef SOCKET sp_type;
+
 #else
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netdb.h>
 #include <unistd.h>
 #include <fcntl.h>
+#include <arpa/inet.h>
 #include <cstring>
+
+typedef int sp_type;
+
 #endif
 
 class SocketPortable {
 private:
-#ifdef _WIN32
-    SOCKET sockfd;
-#else
-    int sockfd;
-#endif
+    sp_type sockfd;
 
 public:
     SocketPortable();
@@ -62,23 +64,23 @@ public:
     bool setNonBlock();
     bool nonBlockNoError() ;
     void close();
-    bool connect( const char *node, const char *service, const struct addrinfo *hints );
+    bool setsockopt( int level, int optname, const void *optval, socklen_t optlen );
 #ifdef _WIN32
-    bool connect( const struct sockaddr *addr, int addrlen );
     int recv( char *buf, int len, int flags );
     int send( const char *buf, int len, int flags );
-    bool setsockopt( int level, int optname, const void *optval, int optlen ) ;
-    bool bind( const struct sockaddr *addr, int addrlen ) ;
-    int recvfrom( char *buf, int len, int flags, struct sockaddr *src_addr, int *addrlen ) ;
+    int recvfrom( char *buf, int len, int flags, struct sockaddr *src_addr, socklen_t *addrlen ) ;
 #else
-    bool setsockopt( int level, int optname, const void *optval, socklen_t optlen );
-    bool bind( const struct sockaddr *addr, socklen_t addrlen );
-    ssize_t recvfrom( void *buf, size_t len, int flags, struct sockaddr *src_addr,
-                      socklen_t *addrlen );
-    bool connect( const struct sockaddr *addr, socklen_t addrlen );
     ssize_t recv( void *buf, size_t len, int flags );
     ssize_t send( const void *buf, size_t len, int flags );
+    ssize_t recvfrom( void *buf, size_t len, int flags, struct sockaddr *src_addr, socklen_t *addrlen );
 #endif
+    /* Same implementation */
+    bool connect( const char *node, const char *service, const struct addrinfo *hints );
+    bool connect( const struct sockaddr *addr, socklen_t addrlen );
+    bool listen( int backlog );
+    bool bind( const struct sockaddr *addr, socklen_t addrlen );
+    SocketPortable* accept( struct sockaddr *addr, socklen_t *addrlen );
+    sp_type getFD();
 };
 
 #ifdef __WIN32
