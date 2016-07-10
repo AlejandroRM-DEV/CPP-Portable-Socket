@@ -56,9 +56,13 @@ bool Poll::checkRevents( size_t pos, short flag ) {
 }
 
 bool Poll::remove( size_t pos ) {
-    sockets.sp[pos] = sockets.sp[--length];
-    sockets.poll_fd[pos] = sockets.poll_fd[length];
-    return true;
+    if( length == 0 ) {
+        return false;
+    } else {
+        sockets.sp[pos] = sockets.sp[--length];
+        sockets.poll_fd[pos] = sockets.poll_fd[length];
+        return true;
+    }
 }
 #ifdef _WIN32
 int Poll::poll ( int timeout ) {
